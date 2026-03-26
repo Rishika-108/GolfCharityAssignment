@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { getUserFromRequest } from "@/lib/auth";
 
 export async function GET(req) {
   try {
-    const user_id = req.nextUrl.searchParams.get("user_id");
-    if (!user_id) return NextResponse.json({ error: "user_id is required" }, { status: 400 });
+    const { user, error, status } = await getUserFromRequest(req);
+    if (error) return NextResponse.json({ error }, { status });
 
-    const { data: scores, error } = await supabase
+    const user_id = user.id;
+
+    const { data: scores, error: fetchError } = await supabase
       .from("scores")
       .select("*")
       .eq("user_id", user_id)
       .order("played_at", { ascending: false });
 
-    if (error) throw error;
+    if (fetchError) throw fetchError;
 
     return NextResponse.json({ scores });
   } catch (error) {
@@ -23,9 +26,13 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { user_id, score, played_at } = await req.json();
+    const { user, error: authError, status } = await getUserFromRequest(req);
+    if (authError) return NextResponse.json({ error: authError }, { status });
 
-    if (!user_id || !Number.isInteger(score) || score < 1 || score > 45 || !played_at) {
+    const user_id = user.id;
+    const { score, played_at } = await req.json();
+
+    if (!Number.isInteger(score) || score < 1 || score > 45 || !played_at) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 

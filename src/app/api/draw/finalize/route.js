@@ -47,17 +47,23 @@ export async function POST(req) {
 
     const userIds = (participants || []).map((p) => p.user_id);
 
+    // Get active subscriptions at draw time
+    const { data: activeSubscriptions, error: subError } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .in("user_id", userIds)
+      .eq("status", "active")
+      .lte("start_date", draw.published_at || new Date().toISOString());
+
+    if (subError) throw subError;
+
+    const subscriptionIds = (activeSubscriptions || []).map((s) => s.id);
+
+    // Sum prize pool from allocations of active subscriptions
     const { data: allocationRows, error: allocationError } = await supabase
       .from("subscription_allocations")
-      .select("prize_pool_amount, payment_id")
-      .in(
-        "payment_id",
-        (await supabase
-          .from("payments")
-          .select("id")
-          .in("user_id", userIds)
-          .lte("created_at", draw.published_at || new Date().toISOString()))?.data?.map((p) => p.id) || []
-      );
+      .select("prize_pool_amount")
+      .in("subscription_id", subscriptionIds);
 
     if (allocationError) throw allocationError;
 

@@ -1,23 +1,29 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { getUserFromRequest } from "@/lib/auth";
 
 export async function POST(req) {
   try {
-    const { user_id, charity_id, amount } = await req.json();
-    if (!user_id || !charity_id || !amount || Number(amount) <= 0) {
-      return NextResponse.json({ error: "user_id, charity_id and positive amount are required" }, { status: 400 });
+    const { user, error: authError, status } = await getUserFromRequest(req);
+    if (authError) return NextResponse.json({ error: authError }, { status });
+
+    const user_id = user.id;
+
+    const { charity_id, amount } = await req.json();
+    if (!charity_id || !amount || Number(amount) <= 0) {
+      return NextResponse.json({ error: "charity_id and positive amount are required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase.from("charity_transactions").insert({
+    const { data: donation, error } = await supabase.from("charity_transactions").insert({
       user_id,
       charity_id,
       amount: Number(amount),
       source: "direct",
-    }).single();
+    }).select().single();
 
     if (error) throw error;
 
-    return NextResponse.json({ donation: data }, { status: 201 });
+    return NextResponse.json({ donation }, { status: 201 });
   } catch (error) {
     console.error("/api/donations/direct POST error", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });

@@ -1,249 +1,365 @@
-# Premium Charity Platform — Design System
+# Evergreen + Earth Design System (Refined for Platform)
 
-**Theme:** Golf + Impact + Rewards
-**Style Goals:** Premium • Trust • Emotion
-**Avoid:** Neon colours, overly saturated gradients, inconsistent styling
+## 1. Design Philosophy (Very Important)
 
----
+It is a **Premium Membership Platform with Impact + Rewards**
 
-# 🎨 Primary Brand (Golf + Charity)
+So the UI should feel:
 
-| Token        | Hex     | Usage                           |
-| ------------ | ------- | ------------------------------- |
-| Deep Green   | #0B3D2E | Navbar, headings, premium areas |
-| Emerald      | #1F7A63 | Buttons, active states          |
-| Soft Emerald | #3FA78A | Gradient mid                    |
-| Mint Accent  | #A7F3D0 | Highlights, hover glow          |
-| Light Mint   | #ECFDF5 | Section backgrounds             |
-| Mint Border  | #D1FAE5 | Borders, dividers               |
+* Clean
+* Trustworthy
+* Calm
+* Premium
+* Purpose-driven
+* Not playful
+* Not casino-like
+* Not sporty
 
----
+**Design keywords:**
 
-# 🏆 Premium Accent (Rewards / Prize System)
-
-| Token     | Hex     | Usage                |
-| --------- | ------- | -------------------- |
-| Gold      | #D4AF37 | Primary CTA, rewards |
-| Soft Gold | #F6E6A8 | Gradient highlight   |
-| Warm Gold | #E6C200 | Hover states         |
-
----
-
-# 🔵 Trust Layer (Analytics / System UI)
-
-| Token        | Hex     | Usage             |
-| ------------ | ------- | ----------------- |
-| Navy         | #1F3A5F | Stats, dashboards |
-| Indigo       | #4F46E5 | Links, charts     |
-| Light Indigo | #EEF2FF | Background tint   |
-
----
-
-# ⚪ Neutrals
-
-| Token      | Hex     | Usage           |
-| ---------- | ------- | --------------- |
-| White      | #FFFFFF | Cards           |
-| Background | #F5F7FA | Page background |
-| Charcoal   | #1F2937 | Main text       |
-| Muted      | #6B7280 | Secondary text  |
-| Border     | #E5E7EB | Dividers        |
-
----
-
-# 🚦 Status System
-
-| State   | Colour  |
-| ------- | ------- |
-| Success | #22C55E |
-| Pending | #F59E0B |
-| Error   | #EF4444 |
-| Info    | #3B82F6 |
-
----
-
-# 🧩 Component Conventions
-
-## 🔘 Buttons
-
-### Primary (Main CTA)
-
-```css
-background: linear-gradient(135deg, #D4AF37, #F6E6A8);
-color: #0B3D2E;
-border-radius: 10px;
-box-shadow: 0 4px 18px rgba(212,175,55,0.35);
 ```
-
-### Secondary (Platform Action)
-
-```css
-background: linear-gradient(135deg, #1F7A63, #0B3D2E);
-color: #ffffff;
-```
-
-### Outline
-
-```css
-border: 2px solid #1F7A63;
-color: #1F7A63;
-background: transparent;
+Calm
+Premium
+Clean
+Purposeful
+Trustworthy
+Minimal
+Soft shadows
+Rounded cards
+Subtle motion
 ```
 
 ---
 
-## 🧾 Cards
+# 2. Color System — Role Based Usage
 
-```css
+Instead of just listing colors, define **when each color is used**.
+
+## Primary Evergreen (Main Platform UI)
+
+| Token       | Hex     | Use                                   |
+| ----------- | ------- | ------------------------------------- |
+| Deep Forest | #1b4332 | Page titles, sidebar, headings        |
+| Emerald     | #2d6a4f | Primary buttons, links, active states |
+| Sage        | #40916c | Gradients, charts                     |
+| Leaf        | #52b788 | Highlights, icons                     |
+| Mint        | #d8f3dc | Badges, highlights                    |
+| Mint Light  | #f4fdf6 | Section backgrounds                   |
+| Mint Border | #b7e4c7 | Borders                               |
+
+### Usage Rule
+
+```
+Deep Forest → Text / Headings
+Emerald → Actions
+Mint → Information / Impact
+Ghost White → Page background
+White → Cards
+```
+
+This rule keeps UI consistent.
+
+---
+
+# 3. Earth Palette (Admin / Secondary Role)
+
+Use Earth colors mainly for:
+
+* Admin dashboard
+* Supervisor tools
+* Internal panels
+* Management UI
+
+| Token        | Hex     | Use           |
+| ------------ | ------- | ------------- |
+| Saddle Brown | #774936 | Admin buttons |
+| Clay         | #fde8d8 | Admin cards   |
+| Clay Border  | #f4c0a0 | Admin borders |
+
+**Important:**
+Do NOT mix Earth palette into main user dashboard heavily.
+
+---
+
+# 4. Neutrals (Structure)
+
+| Token       | Hex     | Usage           |
+| ----------- | ------- | --------------- |
+| White       | #ffffff | Cards           |
+| Ghost White | #f9fafb | Page background |
+| Charcoal    | #1a1a1a | Body text       |
+| Muted       | #5c7a6b | Labels          |
+| Border      | #e8f5e9 | Dividers        |
+
+---
+
+# 5. Status Colors (System States)
+
+These will be used everywhere (draw, verification, subscription).
+
+| State             | Color   | Use                 |
+| ----------------- | ------- | ------------------- |
+| Pending           | #f59e0b | Waiting proof       |
+| Active / Assigned | #2d6a4f | Active subscription |
+| Completed         | #6366f1 | Paid / Completed    |
+| Error             | #dc2626 | Rejected / Failed   |
+
+---
+
+# 6. Page Background Rules (Very Important)
+
+Use only these combinations:
+
+| Page        | Background                     |
+| ----------- | ------------------------------ |
+| Landing     | Gradient Emerald → Deep Forest |
+| Dashboard   | Ghost White                    |
+| Forms       | Ghost White                    |
+| Admin       | Clay Light                     |
+| Draw Page   | Mint Light                     |
+| Impact Page | Mint Light                     |
+
+This keeps visual separation between sections.
+
+---
+
+# 7. Component System (Refined)
+
+## Buttons
+
+### Primary Button
+
+Used for:
+
+* Add Score
+* Subscribe
+* Verify Win
+* Save
+* Confirm
+
+```
+background: linear-gradient(135deg, #2d6a4f, #1b4332)
+color: #ffffff
+border-radius: 50px
+padding: 12px 20px
+font-weight: 600
+box-shadow: 0 4px 18px rgba(45,106,79,0.35)
+```
+
+### Secondary Button
+
+```
+background: #ffffff
+border: 2px solid #2d6a4f
+color: #2d6a4f
+```
+
+### Danger Button
+
+```
+background: #dc2626
+color: white
+```
+
+---
+
+# 8. Cards (Very Important Component)
+
+Use the same card everywhere.
+
+```
 background: #ffffff;
-border: 1px solid #E5E7EB;
+border: 1px solid #e8f5e9;
 border-radius: 16px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+box-shadow: 0 2px 10px rgba(27,67,50,0.05);
+padding: 20px;
 transition: all 0.2s ease;
 ```
 
-### Card Hover
+Hover:
 
-```css
+```
 transform: translateY(-2px);
-box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+box-shadow: 0 8px 20px rgba(27,67,50,0.08);
 ```
 
 ---
 
-## ✏️ Inputs / Forms
+# 9. Special Cards (Platform Specific)
 
-```css
-background: #F5F7FA;
-border: 1.5px solid #E5E7EB;
-border-radius: 10px;
-padding: 12px;
+You actually need **special card types** for your platform.
+
+## Impact Card
+
+```
+background: #f4fdf6
+border: 1px solid #b7e4c7
 ```
 
-### Focus State
+## Prize Card
 
-```css
-border-color: #1F7A63;
-box-shadow: 0 0 0 3px #A7F3D0;
+```
+background: linear-gradient(135deg, #52b788, #2d6a4f)
+color: white
 ```
 
----
+## Draw Result Card
 
-## 🟡 Draw / Prize Elements
-
-```css
-background: linear-gradient(135deg, #D4AF37, #F6E6A8);
-color: #0B3D2E;
-border-radius: 50%;
-font-weight: bold;
+```
+border-left: 6px solid Emerald
 ```
 
----
+## Winner Card
 
-# 🔤 Typography
-
-| Type                | Style                          |
-| ------------------- | ------------------------------ |
-| Font                | 'Inter', 'Poppins', sans-serif |
-| Page Title          | 800, #0B3D2E                   |
-| Section Title       | 600, #1F2937                   |
-| Body                | 400, #1F2937                   |
-| Subtext             | 400, #6B7280                   |
-| Line Height Body    | 1.5                            |
-| Line Height Headers | 1.2                            |
-
----
-
-# 📐 Layout System
-
-## Spacing (8px Grid)
-
-| Token | Value |
-| ----- | ----- |
-| xs    | 8px   |
-| sm    | 16px  |
-| md    | 24px  |
-| lg    | 32px  |
-| xl    | 48px  |
-| xxl   | 64px  |
-
----
-
-## Layout Rules
-
-| Element         | Value       |
-| --------------- | ----------- |
-| Page padding    | 24px        |
-| Card padding    | 24px        |
-| Section spacing | 64px        |
-| Grid gap        | 24px        |
-| Border radius   | 10px / 16px |
-
----
-
-# 🎬 Animations & Motion
-
-**Use Framer Motion (recommended)**
-
-## Page Transition
-
-```js
-initial={{ opacity:0, y:20 }}
-animate={{ opacity:1, y:0 }}
 ```
-
-## Card Hover
-
-```js
-whileHover={{ y: -2 }}
-```
-
-## Button Tap
-
-```js
-whileTap={{ scale: 0.97 }}
-```
-
-## Sidebar Animation
-
-```js
-initial={{ x:-80, opacity:0 }}
-animate={{ x:0, opacity:1 }}
+border-left: 6px solid Indigo
 ```
 
 ---
 
-# 🧠 UX Rules (Very Important)
+# 10. Score Tokens (Very Important Component)
 
-## 1. Visual Hierarchy
+Your platform revolves around these.
 
-| Colour | Purpose           |
-| ------ | ----------------- |
-| Gold   | Actions (CTA)     |
-| Green  | System / Platform |
-| Navy   | Information       |
-| Grey   | Background        |
+```
+width: 70px
+height: 70px
+border-radius: 50%
+background: linear-gradient(135deg, #52b788, #2d6a4f)
+color: white
+display: flex
+align-items: center
+justify-content: center
+font-weight: 700
+font-size: 20px
+box-shadow: 0 4px 12px rgba(45,106,79,0.3)
+```
 
----
-
-## 2. Do NOT Overuse Gold
-
-**Gold = Premium**
-Use only for:
-
-* CTA buttons
-* Rewards
-* Highlights
+These should animate when updated.
 
 ---
 
-## 3. Consistency Rules
+# 11. Typography System
 
-* Same border radius everywhere
-* Same padding system
-* Same shadows
-* Same typography scale
-* Follow 8px spacing grid
-* Consistent gradients
-* Consistent animation timings
+| Use           | Size | Weight | Color       |
+| ------------- | ---- | ------ | ----------- |
+| Page Title    | 32px | 800    | Deep Forest |
+| Section Title | 22px | 600    | Deep Forest |
+| Card Title    | 18px | 600    | Charcoal    |
+| Subtitle      | 14px | 500    | Muted       |
+| Body          | 15px | 400    | Charcoal    |
+| Small         | 12px | 400    | Muted       |
+
+Font:
+
+```
+Poppins, Segoe UI, sans-serif
+```
+
+---
+
+# 12. Motion System (Framer Motion)
+
+Use motion consistently:
+
+| Element      | Animation       |
+| ------------ | --------------- |
+| Page         | Fade + slide up |
+| Cards        | Fade in         |
+| Buttons      | Press scale     |
+| Sidebar      | Slide in        |
+| Score tokens | Slide shift     |
+| Draw numbers | Pulse           |
+| Modals       | Scale in        |
+
+### Standard Page Animation
+
+```
+initial={{ opacity: 0, y: 20 }}
+animate={{ opacity: 1, y: 0 }}
+transition={{ duration: 0.3 }}
+```
+
+---
+
+# 13. Layout Grid System
+
+Use this layout for dashboard:
+
+```
+------------------------------------------------
+| Impact Card | Prize Pool |
+------------------------------------------------
+| Rolling Scores (wide card) |
+------------------------------------------------
+| Countdown | Draw Info |
+------------------------------------------------
+```
+
+Use:
+
+```
+grid-template-columns: repeat(12, 1fr)
+gap: 20px
+```
+
+---
+
+# 14. Pages You Will Have
+
+Very important for system structure.
+
+```
+Public
+/landing
+/login
+/signup
+
+Onboarding
+/onboarding/charity
+/onboarding/contribution
+/onboarding/subscription
+
+App
+/dashboard
+/scores
+/draw
+/results
+/impact
+/winners
+/account
+
+Admin
+/admin
+/admin/draw
+/admin/users
+/admin/charities
+/admin/verifications
+```
+
+---
+
+# 15. Design System Rules (Most Important Section)
+
+If you follow these, the UI will look consistent:
+
+### Rules
+
+1. Page background always Ghost White.
+2. Cards always White with Mint border.
+3. Primary actions always Emerald gradient.
+4. Impact/Charity sections use Mint backgrounds.
+5. Admin uses Earth palette.
+6. Headings always Deep Forest.
+7. Body text always Charcoal.
+8. Use rounded corners everywhere (12–16px).
+9. Use soft shadows only.
+10. Use Framer Motion for all transitions.
+11. Never use bright colors except status.
+12. Never use black backgrounds.
+13. Never mix too many colors in one screen.
+14. One primary action per card.
+15. Score tokens always circular gradient.
+
+---
 

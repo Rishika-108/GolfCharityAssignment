@@ -1,29 +1,37 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { stripe } from "@/lib/stripeClient";
+import { getUserFromRequest } from "@/lib/auth";
 
 export async function GET(req) {
   try {
-    const user_id = req.nextUrl.searchParams.get("user_id");
-    if (!user_id) return NextResponse.json({ error: "user_id is required" }, { status: 400 });
+    const { user, error, status } = await getUserFromRequest(req);
+    if (error) return NextResponse.json({ error }, { status });
 
-    const { data, error } = await supabase
+    const user_id = user.id;
+
+    const { data: subscriptions, error: fetchError } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user_id)
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
-    return NextResponse.json({ subscriptions: data || [] });
+    if (fetchError) throw fetchError;
+    return NextResponse.json({ subscriptions: subscriptions || [] });
   } catch (error) {
-    console.error("/api/subscription/list GET error", error);
+    console.error("/api/subscription/manage GET error", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   try {
+    const { user, error: authError, status: authStatus } = await getUserFromRequest(req);
+    if (authError) return NextResponse.json({ error: authError }, { status: authStatus });
+
+    const user_id = user.id;
     const { subscription_id, action } = await req.json();
+
     if (!subscription_id || !["cancel", "resume"].includes(action)) {
       return NextResponse.json({ error: "subscription_id and valid action required" }, { status: 400 });
     }
@@ -33,8 +41,14 @@ export async function POST(req) {
       .select("*")
       .eq("id", subscription_id)
       .single();
+
     if (subError) throw subError;
     if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
+    
+    // IDOR protection
+    if (sub.user_id !== user_id) {
+      return NextResponse.json({ error: "Unauthorized access to subscription" }, { status: 403 });
+    }
 
     const status = action === "cancel" ? "cancelled" : "active";
     const { data, error: updateError } = await supabase

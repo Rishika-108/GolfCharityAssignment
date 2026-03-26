@@ -46,6 +46,7 @@ CREATE TABLE payments (
 CREATE TABLE subscription_allocations (
   id uuid PRIMARY KEY,
   payment_id uuid REFERENCES payments (id) ON DELETE CASCADE,
+  subscription_id uuid REFERENCES subscriptions (id) ON DELETE CASCADE,
   prize_pool_amount numeric(12,2) NOT NULL CHECK (prize_pool_amount >= 0),
   charity_amount numeric(12,2) NOT NULL CHECK (charity_amount >= 0),
   platform_fee numeric(12,2) NOT NULL CHECK (platform_fee >= 0),

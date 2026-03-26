@@ -68,6 +68,7 @@ export async function POST(req) {
 
         await supabase.from("subscription_allocations").insert({
           payment_id: session.payment_intent || null,
+          subscription_id: subscriptionId,
           prize_pool_amount: prizePool,
           charity_amount: charityAmount,
           platform_fee: platformFee,
