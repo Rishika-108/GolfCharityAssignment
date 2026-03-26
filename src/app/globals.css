@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-deep-green: #0B3D2E;
+  --color-emerald: #1F7A63;
+  --color-soft-emerald: #3FA78A;
+  --color-mint-accent: #A7F3D0;
+  --color-light-mint: #ECFDF5;
+  --color-mint-border: #D1FAE5;
+  --color-gold: #D4AF37;
+  --color-soft-gold: #F6E6A8;
+  --color-warm-gold: #E6C200;
+  --color-background: #F5F7FA;
+  --color-card: #ffffff;
+  --color-text: #1F2937;
+  --color-muted: #6B7280;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-background: #0B1214;
+    --color-card: #111827;
+    --color-text: #E5E7EB;
+    --color-muted: #9CA3AF;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-geist-sans), Inter, system-ui, -apple-system, sans-serif;
 }
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-mint-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-soft-gold));
+  color: var(--color-deep-green);
+  font-weight: 700;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--color-emerald), var(--color-deep-green));
+  color: white;
+  font-weight: 600;
+}
+
+.btn-outline {
+  border: 2px solid var(--color-emerald);
+  color: var(--color-emerald);
+  background: transparent;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+

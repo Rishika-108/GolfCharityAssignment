@@ -20,6 +20,40 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase DB Setup (Phase 1+2)
+
+1. Install Supabase CLI and login:
+
+```bash
+npm install -g supabase
+supabase login
+```
+
+2. Initialize supabase in project root:
+
+```bash
+supabase init
+```
+
+3. Apply schema and policies:
+
+```bash
+supabase db push --schema supabase_schema.sql
+psql $SUPABASE_DB_URL -f supabase_rls.sql
+```
+
+4. Configure environment variables in `.env.local`:
+
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+
+5. Run local development:
+
+```bash
+npm run dev
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
