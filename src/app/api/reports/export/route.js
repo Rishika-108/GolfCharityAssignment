@@ -21,7 +21,7 @@ export async function GET(req) {
     if (report === "winners") {
       const { data: winners } = await supabase
         .from("winners")
-        .select("id,user_id,match_type,prize_amount,status,created_at")
+        .select("id,user_id,match_type,prize_amount,status,created_at,proofs(file_url,status)")
         .order("created_at", { ascending: false });
       data = winners || [];
     } else if (report === "charities") {

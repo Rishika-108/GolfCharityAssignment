@@ -15,7 +15,7 @@ export function middleware(request) {
   }
 
   // Protected user routes
-  const userRoutes = ["/api/scores", "/api/winners/proof", "/api/donations/direct"];
+  const userRoutes = ["/api/scores", "/api/winners/proof", "/api/donations/direct", "/api/user/profile", "/api/subscription/manage"];
   const isUserRoute = userRoutes.some((route) => pathname.startsWith(route));
 
   if (isUserRoute) {

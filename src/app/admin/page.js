@@ -202,16 +202,16 @@ export default function AdminPage() {
           <div className="card card-impact">
             <h3 className="heading-3 mb-4">Winner Management</h3>
             <p className="subtitle mb-4">Review and approve winner proofs, manage payouts</p>
-            <button className="btn-outline w-full py-2 rounded-lg font-semibold">
-              Manage Winners →
+            <button onClick={() => window.location.href = "/admin/winners"} className="btn-outline w-full py-2 rounded-lg font-semibold border border-emerald text-emerald hover:bg-emerald/10 transition">
+              Manage Winners &rarr;
             </button>
           </div>
 
           <div className="card card-impact">
             <h3 className="heading-3 mb-4">System Logs</h3>
             <p className="subtitle mb-4">View admin actions and system events</p>
-            <button className="btn-outline w-full py-2 rounded-lg font-semibold">
-              View Logs →
+            <button className="btn-outline w-full py-2 rounded-lg font-semibold border border-emerald text-emerald hover:bg-emerald/10 transition">
+              View Logs &rarr;
             </button>
           </div>
         </div>

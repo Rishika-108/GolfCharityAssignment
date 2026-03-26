@@ -24,12 +24,15 @@ export async function GET(req) {
       .single();
 
     const { data: scores } = await supabase.from("scores").select("*").eq("user_id", user_id).order("played_at", { ascending: false });
+    
+    const { data: winners } = await supabase.from("winners").select("*").eq("user_id", user_id);
 
     return NextResponse.json({
       profile,
       subscription,
       charity,
       scores: scores || [],
+      winners: winners || [],
     });
   } catch (error) {
     console.error("/api/user/profile GET error", error);
