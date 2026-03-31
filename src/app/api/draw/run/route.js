@@ -146,6 +146,15 @@ export async function POST(req) {
     }
 
     await adminSupabase.from("draws").update({ status: "published", is_locked: true, published_at: new Date().toISOString() }).eq("id", draw.id);
+
+    // LOG SUCCESSFUL DRAW
+    await adminSupabase.from("admin_logs").insert({
+       action: `draw_run_${draw_type}`,
+       entity_type: "draw",
+       entity_id: draw.id,
+       admin_id: "ADMIN"
+    });
+
     return NextResponse.json({ draw, participants: participantRecords }, { status: 201 });
   } catch (error) {
     console.error("/api/draw/run error", error);

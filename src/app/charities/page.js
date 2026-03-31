@@ -35,6 +35,36 @@ export default function CharityDirectory() {
     return matchesSearch && matchesCountry;
   });
 
+  const featured = filtered.filter(c => c.is_featured);
+  const others = filtered.filter(c => !c.is_featured);
+
+  const CharityCard = ({ charity }) => (
+    <div key={charity.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition flex flex-col group">
+      <div className="h-48 overflow-hidden relative">
+         <img 
+           src={charity.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=400"} 
+           alt={charity.name}
+           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+         />
+         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-emerald border border-emerald/20">
+           {charity.country || "Global"}
+         </div>
+      </div>
+      <div className="p-6 flex-1 flex flex-col">
+        <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight">{charity.name}</h3>
+        <p className="text-gray-600 text-sm mb-6 flex-1 line-clamp-3">
+          {charity.description}
+        </p>
+        <div className="pt-4 border-t border-gray-50 flex items-center justify-between mt-auto">
+          <span className="text-xs font-bold text-emerald uppercase tracking-wider">Active Partner</span>
+          <Link href="/register" className="bg-emerald text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-opacity-90 transition">
+            Support
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
@@ -55,23 +85,23 @@ export default function CharityDirectory() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-12 flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search Charities</label>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-12 flex flex-col md:flex-row gap-8 items-center">
+          <div className="flex-1 w-full">
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Search Missions</label>
             <input 
               type="text" 
               placeholder="Search by name or mission..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition"
+              className="w-full px-5 py-3 border border-gray-100 bg-gray-50 rounded-2xl focus:ring-4 focus:ring-emerald/10 focus:border-emerald outline-none transition font-medium"
             />
           </div>
           <div className="w-full md:w-64">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Country / Region</label>
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Filter by Country</label>
             <select 
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition bg-white"
+              className="w-full px-5 py-3 border border-gray-100 bg-gray-50 rounded-2xl focus:ring-4 focus:ring-emerald/10 focus:border-emerald outline-none transition bg-white font-medium"
             >
               {countries.map(country => <option key={country} value={country}>{country}</option>)}
             </select>
@@ -80,40 +110,35 @@ export default function CharityDirectory() {
 
         {/* Results */}
         {loading ? (
-          <div className="text-center py-20 text-gray-500 font-medium">Loading charities...</div>
+          <div className="text-center py-20 text-gray-500 font-medium animate-pulse">Loading charities...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
             <p className="text-gray-400 text-lg">No charities found matching your criteria.</p>
             <button onClick={() => { setSearchTerm(""); setSelectedCountry("All"); }} className="mt-4 text-emerald font-bold border-b border-emerald">Clear all filters</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filtered.map(charity => (
-              <div key={charity.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition flex flex-col group">
-                <div className="h-48 overflow-hidden relative">
-                   <img 
-                     src={charity.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=400"} 
-                     alt={charity.name}
-                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                   />
-                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-emerald border border-emerald/20">
-                     {charity.country || "Global"}
-                   </div>
+          <div className="space-y-16">
+            {featured.length > 0 && selectedCountry === "All" && !searchTerm && (
+              <section>
+                <div className="flex items-center gap-4 mb-8">
+                   <h2 className="text-2xl font-black text-gray-900 tracking-tight">Featured Causes</h2>
+                   <div className="h-0.5 flex-1 bg-emerald/10"></div>
                 </div>
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight">{charity.name}</h3>
-                  <p className="text-gray-600 text-sm mb-6 flex-1 line-clamp-3">
-                    {charity.description}
-                  </p>
-                  <div className="pt-4 border-t border-gray-50 flex items-center justify-between mt-auto">
-                    <span className="text-xs font-bold text-emerald uppercase tracking-wider">Active Partner</span>
-                    <Link href="/register" className="bg-emerald text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-opacity-90 transition">
-                      Support
-                    </Link>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {featured.map(c => <CharityCard key={c.id} charity={c} />)}
                 </div>
+              </section>
+            )}
+
+            <section>
+              <div className="flex items-center gap-4 mb-8">
+                 <h2 className="text-2xl font-black text-gray-900 tracking-tight">All Charities</h2>
+                 <div className="h-0.5 flex-1 bg-emerald/10"></div>
               </div>
-            ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {others.map(c => <CharityCard key={c.id} charity={c} />)}
+              </div>
+            </section>
           </div>
         )}
       </div>

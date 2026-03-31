@@ -3,9 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AdminWinnersPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [winners, setWinners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,10 +46,10 @@ export default function AdminWinnersPage() {
         body: JSON.stringify({ winner_id: winnerId, action }) // "approve" or "reject"
       });
       if (!res.ok) throw new Error(`Failed to ${action} winner proof`);
-      alert(`Proof ${action}d successfully`);
+      addToast(`Proof ${action}d successfully`);
       loadWinners();
     } catch (err) {
-      alert("Error: " + err.message);
+      addToast(err.message, "error");
     } finally {
       setActionLoading(false);
     }
@@ -60,15 +62,15 @@ export default function AdminWinnersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": adminToken
+          "x-admin-token": "admin-token"
         },
         body: JSON.stringify({ winner_id: winnerId })
       });
       if (!res.ok) throw new Error(`Failed to process payout`);
-      alert(`Payout marked as paid!`);
+      addToast(`Payout marked as paid!`);
       loadWinners();
     } catch (err) {
-      alert("Error: " + err.message);
+      addToast(err.message, "error");
     } finally {
       setActionLoading(false);
     }

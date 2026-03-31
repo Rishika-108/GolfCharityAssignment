@@ -90,23 +90,33 @@ export default function DashboardPage() {
     }
   };
 
-  const handleUploadProof = async (winnerId) => {
-    if (!proofUrl) return addToast("Enter proof file URL (or link)", "warning");
+  const handleUploadProof = async (winnerId, file) => {
+    if (!file) return addToast("Please select a file to upload", "warning");
+    
+    if (file.size > 2 * 1024 * 1024) {
+       return addToast("File is too large. Please use an image under 2MB.", "warning");
+    }
+
     setActionLoading(true);
+    addToast("Processing proof file...", "info");
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch("/api/winners/proof", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ winner_id: winnerId, file_url: proofUrl })
-      });
-      if (!res.ok) throw new Error("Failed to upload proof");
-      addToast("Proof uploaded successfully! Awaiting review.");
-      setProofUrl("");
-      loadProfile();
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result;
+        const token = localStorage.getItem("authToken");
+        const res = await fetch("/api/winners/proof", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ winner_id: winnerId, file_url: base64 })
+        });
+        if (!res.ok) throw new Error("Failed to upload proof");
+        addToast("Proof uploaded successfully! Awaiting review.");
+        loadProfile();
+        setActionLoading(false);
+      };
     } catch (e) {
       addToast(e.message, "error");
-    } finally {
       setActionLoading(false);
     }
   };
@@ -171,6 +181,7 @@ export default function DashboardPage() {
 
   if (loading) return <div className="p-8 text-center text-gray-600 font-medium">Loading your dashboard...</div>;
   if (error) return <div className="p-8 text-red-500 text-center font-medium">Error: {error}</div>;
+  if (!userData) return <div className="p-8 text-center text-gray-600 font-medium">Navigating...</div>;
 
   const { profile, subscription, charity, scores, winners } = userData;
 
@@ -188,7 +199,14 @@ export default function DashboardPage() {
                 Admin Panel
               </Link>
             )}
-            <button onClick={() => { localStorage.removeItem("authToken"); router.push("/login"); }} className="px-4 py-2 text-red-600 hover:text-red-800 font-medium">
+            <button 
+              onClick={() => { 
+                 localStorage.removeItem("authToken"); 
+                 setUserData(null);
+                 router.push("/"); 
+              }} 
+              className="px-4 py-2 text-red-600 hover:text-red-800 font-medium transition active:scale-95"
+            >
               Logout
             </button>
           </div>
@@ -211,20 +229,16 @@ export default function DashboardPage() {
                   </div>
                   {w.status === "pending" || w.status === "waiting_proof" ? (
                     <div className="flex flex-col sm:flex-row gap-2">
-                       <input 
-                         type="text" 
-                         placeholder="Paste Proof Image URL" 
-                         value={proofUrl} 
-                         onChange={(e) => setProofUrl(e.target.value)} 
-                         className="px-3 py-2 text-gray-900 rounded shadow-inner w-full sm:w-64 focus:outline-none"
-                       />
-                       <button 
-                         disabled={actionLoading} 
-                         onClick={() => handleUploadProof(w.id)} 
-                         className="bg-white text-emerald px-4 py-2 rounded font-bold hover:bg-gray-100 transition whitespace-nowrap"
-                       >
-                         Upload Proof
-                       </button>
+                       <label className={`px-4 py-2 rounded-lg font-bold transition cursor-pointer flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 active:translate-y-0 duration-200 
+                         ${w.status === 'pending' ? 'bg-emerald text-white bg-opacity-90' : 'bg-white text-emerald hover:bg-gray-100'}`}>
+                          📁 {actionLoading ? 'Uploading...' : (w.status === 'pending' ? 'Proof Submitted' : 'Choose Proof File')}
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            disabled={actionLoading || w.status === 'pending'}
+                            onChange={(e) => handleUploadProof(w.id, e.target.files[0])}
+                            className="hidden" / >
+                       </label>
                     </div>
                   ) : null}
                 </div>
@@ -252,9 +266,18 @@ export default function DashboardPage() {
                     Plan: <span className="font-semibold">{subscription.plan_type}</span>
                   </p>
                   {subscription.start_date && (
-                    <p className="text-gray-600 text-sm">
-                      Started: {subscription.start_date.slice(0, 10)}
-                    </p>
+                    <div className="bg-emerald/5 p-3 rounded-lg border border-emerald/10">
+                      <p className="text-gray-600 text-xs uppercase font-bold tracking-widest opacity-60">Next Renewal</p>
+                      <p className="text-emerald font-black text-lg">
+                        {(() => {
+                           const d = new Date(subscription.start_date);
+                           if (subscription.plan_type === 'yearly') d.setFullYear(d.getFullYear() + 1);
+                           else d.setMonth(d.getMonth() + 1);
+                           return d.toISOString().slice(0, 10);
+                        })()}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Started: {subscription.start_date.slice(0, 10)}</p>
+                    </div>
                   )}
                 </div>
               ) : (
