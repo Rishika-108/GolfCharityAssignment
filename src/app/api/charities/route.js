@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { getUserFromRequest } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -14,6 +15,11 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    const { profile, error: authError, status } = await getUserFromRequest(req);
+    if (authError || !profile?.is_admin) {
+      return NextResponse.json({ error: authError || "Unauthorized" }, { status: status || 403 });
+    }
+
     const { name, description, image_url, country, is_featured } = await req.json();
     if (!name) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
@@ -25,7 +31,7 @@ export async function POST(req) {
       image_url,
       country,
       is_featured: Boolean(is_featured),
-    }).single();
+    }).select().single();
 
     if (error) throw error;
     return NextResponse.json({ charity: data }, { status: 201 });

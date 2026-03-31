@@ -16,13 +16,19 @@ export const metadata = {
   description: "A premium golf charity platform combining competitive drawing with charitable giving. Track your scores, compete monthly, and support causes you care about.",
 };
 
+import { ToastProvider } from "@/components/ui/ToastProvider";
+
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </body>
     </html>
   );
 }

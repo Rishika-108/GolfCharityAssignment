@@ -1,6 +1,27 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function Home() {
+  const [featuredCharity, setFeaturedCharity] = useState(null);
+
+  useEffect(() => {
+    async function fetchFeatured() {
+      try {
+        const res = await fetch("/api/charities");
+        if (res.ok) {
+          const data = await res.json();
+          const featured = data.charities?.find(c => c.is_featured) || data.charities?.[0];
+          setFeaturedCharity(featured);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    fetchFeatured();
+  }, []);
+
   return (
     <div className="min-h-screen font-sans" style={{ background: "linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%)" }}>
       
@@ -10,6 +31,9 @@ export default function Home() {
           ⛳ DigitalHeroes
         </div>
         <div className="flex gap-4 items-center">
+          <Link href="/charities" className="text-white hover:text-green-200 font-medium transition mr-4">
+            Browse Charities
+          </Link>
           <Link href="/login" className="text-white hover:text-green-200 font-medium transition">
             Login
           </Link>
@@ -17,7 +41,7 @@ export default function Home() {
             Register
           </Link>
           <div className="h-6 w-px bg-white/30 mx-2 hidden sm:block"></div>
-          <Link href="/login" className="text-emerald bg-emerald-900/30 px-3 py-1.5 rounded text-sm font-semibold border border-emerald/50 hover:bg-emerald/50 transition hidden sm:block" style={{ color: "#a7c957" }}>
+          <Link href="/admin/login" className="text-emerald bg-emerald-900/30 px-3 py-1.5 rounded text-sm font-semibold border border-emerald/50 hover:bg-emerald/50 transition hidden sm:block" style={{ color: "#a7c957" }}>
             Admin Login
           </Link>
         </div>
@@ -49,11 +73,25 @@ export default function Home() {
               Member Sign In
             </Link>
           </div>
-          <div className="pt-6 sm:hidden">
-            <Link href="/login" className="text-sm border-b border-white/50 text-white/80 pb-1">Admin Login</Link>
-          </div>
         </div>
       </div>
+
+      {/* Featured Charity Section */}
+      {featuredCharity && (
+         <div className="max-w-6xl mx-auto px-8 mb-20">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 flex flex-col md:flex-row items-center gap-8">
+               <div className="w-full md:w-1/3 aspect-video rounded-2xl overflow-hidden shadow-2xl">
+                  <img src={featuredCharity.image_url || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=400"} className="w-full h-full object-cover" alt="Featured Charity" />
+               </div>
+               <div className="flex-1 text-white">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#a7c957]">This Month's Featured Partner</span>
+                  <h2 className="text-3xl font-black mt-2 mb-4">{featuredCharity.name}</h2>
+                  <p className="opacity-80 mb-6 line-clamp-2">{featuredCharity.description}</p>
+                  <Link href="/charities" className="text-white font-bold border-b border-white pb-1 hover:text-[#a7c957] hover:border-[#a7c957] transition">Learn about our partners &rarr;</Link>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* Features Grid */}
       <div className="bg-white px-8 py-20 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">

@@ -23,7 +23,7 @@ CREATE TABLE profiles (
 );
 
 CREATE TABLE subscriptions (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   plan_type text CHECK (plan_type in ('monthly','yearly')),
   status subscription_status NOT NULL DEFAULT 'pending',
@@ -34,7 +34,7 @@ CREATE TABLE subscriptions (
 );
 
 CREATE TABLE payments (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   amount numeric(12,2) NOT NULL CHECK (amount >= 0),
   currency text NOT NULL DEFAULT 'USD',
@@ -44,7 +44,7 @@ CREATE TABLE payments (
 );
 
 CREATE TABLE subscription_allocations (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   payment_id uuid REFERENCES payments (id) ON DELETE CASCADE,
   subscription_id uuid REFERENCES subscriptions (id) ON DELETE CASCADE,
   prize_pool_amount numeric(12,2) NOT NULL CHECK (prize_pool_amount >= 0),
@@ -54,7 +54,7 @@ CREATE TABLE subscription_allocations (
 );
 
 CREATE TABLE charities (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   description text,
   image_url text,
@@ -64,7 +64,7 @@ CREATE TABLE charities (
 );
 
 CREATE TABLE user_charities (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   charity_id uuid REFERENCES charities (id) ON DELETE SET NULL,
   contribution_percentage numeric(5,2) NOT NULL CHECK (contribution_percentage >= 10),
@@ -72,7 +72,7 @@ CREATE TABLE user_charities (
 );
 
 CREATE TABLE charity_transactions (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   charity_id uuid REFERENCES charities (id) ON DELETE SET NULL,
   amount numeric(12,2) NOT NULL CHECK (amount >= 0),
@@ -81,7 +81,7 @@ CREATE TABLE charity_transactions (
 );
 
 CREATE TABLE scores (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   score int NOT NULL CHECK (score BETWEEN 1 AND 45),
   played_at date NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE scores (
 );
 
 CREATE TABLE draws (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   month int NOT NULL CHECK (month BETWEEN 1 AND 12),
   year int NOT NULL CHECK (year >= 2000),
   draw_type draw_type NOT NULL DEFAULT 'random',
@@ -102,7 +102,7 @@ CREATE TABLE draws (
 );
 
 CREATE TABLE draw_participants (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   draw_id uuid REFERENCES draws (id) ON DELETE CASCADE,
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   is_eligible boolean NOT NULL DEFAULT false,
@@ -110,7 +110,7 @@ CREATE TABLE draw_participants (
 );
 
 CREATE TABLE draw_simulations (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   draw_id uuid REFERENCES draws (id) ON DELETE CASCADE,
   simulated_numbers int[],
   results_json jsonb,
@@ -118,7 +118,7 @@ CREATE TABLE draw_simulations (
 );
 
 CREATE TABLE draw_results (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   draw_id uuid REFERENCES draws (id) ON DELETE CASCADE,
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   matched_count int NOT NULL CHECK (matched_count BETWEEN 0 AND 5),
@@ -127,7 +127,7 @@ CREATE TABLE draw_results (
 );
 
 CREATE TABLE prize_pools (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   draw_id uuid REFERENCES draws (id) ON DELETE CASCADE UNIQUE,
   total_pool numeric(12,2) NOT NULL CHECK (total_pool >= 0),
   match_5_pool numeric(12,2) NOT NULL CHECK (match_5_pool >= 0),
@@ -138,7 +138,7 @@ CREATE TABLE prize_pools (
 );
 
 CREATE TABLE prize_pool_contributions (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   payment_id uuid REFERENCES payments (id) ON DELETE SET NULL,
   draw_id uuid REFERENCES draws (id) ON DELETE SET NULL,
   amount numeric(12,2) NOT NULL CHECK (amount >= 0),
@@ -146,7 +146,7 @@ CREATE TABLE prize_pool_contributions (
 );
 
 CREATE TABLE winners (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   draw_id uuid REFERENCES draws (id) ON DELETE CASCADE,
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   match_type text CHECK (match_type in ('match_3','match_4','match_5')),
@@ -156,7 +156,7 @@ CREATE TABLE winners (
 );
 
 CREATE TABLE proofs (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   winner_id uuid REFERENCES winners (id) ON DELETE CASCADE,
   file_url text,
   status proof_status NOT NULL DEFAULT 'pending',
@@ -165,7 +165,7 @@ CREATE TABLE proofs (
 );
 
 CREATE TABLE notifications (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES profiles (id) ON DELETE CASCADE,
   type notification_type NOT NULL,
   status notification_status NOT NULL DEFAULT 'sent',
@@ -173,7 +173,7 @@ CREATE TABLE notifications (
 );
 
 CREATE TABLE admin_logs (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id uuid,
   action text,
   entity_type text,

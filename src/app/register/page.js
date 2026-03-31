@@ -11,11 +11,27 @@ export default function RegisterPage() {
     email: "",
     password: "",
     country: "",
-    charity_id: "00000000-0000-0000-0000-000000000000", // Default or fetch real ones
+    charity_id: "", 
     contribution_percentage: 10,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [charities, setCharities] = useState([]);
+
+  useEffect(() => {
+    async function fetchCharities() {
+      try {
+        const res = await fetch("/api/charities");
+        if (res.ok) {
+          const data = await res.json();
+          setCharities(data.charities || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch charities:", err);
+      }
+    }
+    fetchCharities();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,13 +39,13 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      // In real app, charity_id should be selected from a list. 
-      // Ensure we format data correctly.
+      if (!formData.charity_id) {
+         throw new Error("Please select a charity");
+      }
+
       const payload = {
         ...formData,
         contribution_percentage: Number(formData.contribution_percentage),
-        // Providing a dummy charity_id just for the code to work if user selects none
-        charity_id: formData.charity_id === "" ? "00000000-0000-0000-0000-000000000000" : formData.charity_id, 
       };
 
       const res = await fetch("/api/register", {
@@ -96,6 +112,15 @@ export default function RegisterPage() {
 
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-700">Charity Contribution</h3>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Select Charity</label>
+              <select name="charity_id" required
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald focus:border-emerald sm:text-sm bg-white text-gray-900"
+                value={formData.charity_id} onChange={handleChange}>
+                <option value="">-- Choose a Charity --</option>
+                {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Contribution Percentage (%)</label>
               <input name="contribution_percentage" type="number" min="10" max="100" required

@@ -58,6 +58,7 @@ export async function POST(req) {
     const { data: newScore, error: insertError } = await supabase
       .from("scores")
       .insert({ user_id, score, played_at })
+      .select()
       .single();
 
     if (insertError) throw insertError;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { stripe } from "@/lib/stripeClient";
+import { getUserFromRequest } from "@/lib/auth";
 
 function rollingEndDate(startDate, planType) {
   const date = new Date(startDate);
@@ -14,10 +15,14 @@ function rollingEndDate(startDate, planType) {
 
 export async function POST(req) {
   try {
-    const { user_id, plan_type } = await req.json();
+    const { user, error: authError, status } = await getUserFromRequest(req);
+    if (authError) return NextResponse.json({ error: authError }, { status });
 
-    if (!user_id || !plan_type || !["monthly", "yearly"].includes(plan_type)) {
-      return NextResponse.json({ error: "user_id and valid plan_type are required" }, { status: 400 });
+    const user_id = user.id;
+    const { plan_type } = await req.json();
+
+    if (!plan_type || !["monthly", "yearly"].includes(plan_type)) {
+      return NextResponse.json({ error: "valid plan_type is required" }, { status: 400 });
     }
 
     const priceId =
@@ -42,6 +47,7 @@ export async function POST(req) {
         start_date,
         end_date,
       })
+      .select()
       .single();
 
     if (subscriptionError) throw subscriptionError;
@@ -49,7 +55,11 @@ export async function POST(req) {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
+      customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        metadata: { subscription_id: subscription.id, user_id }
+      },
       metadata: { subscription_id: subscription.id, user_id },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/cancel`,

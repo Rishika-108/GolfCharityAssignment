@@ -2,16 +2,23 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [proofUrl, setProofUrl] = useState("");
   const [donateAmount, setDonateAmount] = useState("");
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [showCharityModal, setShowCharityModal] = useState(false);
+  const [charitiesList, setCharitiesList] = useState([]);
+  const [selectedCharityId, setSelectedCharityId] = useState("");
+  const [contribution, setContribution] = useState(10);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -34,10 +41,11 @@ export default function DashboardPage() {
       setUserData(data);
     } catch (err) {
       setError(err.message);
+      addToast(err.message, "error");
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, addToast]);
 
   useEffect(() => {
     loadProfile();
@@ -54,16 +62,16 @@ export default function DashboardPage() {
       });
       if (!res.ok) throw new Error("Failed to change subscription");
       loadProfile();
-      alert(`Subscription ${action}ed successfully.`);
+      addToast(`Subscription ${action}ed successfully.`);
     } catch (e) {
-      alert("Error: " + e.message);
+      addToast(e.message, "error");
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDonate = async () => {
-    if (!donateAmount || Number(donateAmount) <= 0) return alert("Enter valid donation amount");
+    if (!donateAmount || Number(donateAmount) <= 0) return addToast("Enter valid donation amount", "warning");
     setActionLoading(true);
     try {
       const token = localStorage.getItem("authToken");
@@ -73,17 +81,17 @@ export default function DashboardPage() {
         body: JSON.stringify({ charity_id: userData.charity.charity_id, amount: donateAmount })
       });
       if (!res.ok) throw new Error("Failed donation");
-      alert("Thank you for your direct donation!");
+      addToast("Thank you for your direct donation! ❤️");
       setDonateAmount("");
     } catch (e) {
-      alert("Error: " + e.message);
+      addToast(e.message, "error");
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleUploadProof = async (winnerId) => {
-    if (!proofUrl) return alert("Enter proof file URL (or link)");
+    if (!proofUrl) return addToast("Enter proof file URL (or link)", "warning");
     setActionLoading(true);
     try {
       const token = localStorage.getItem("authToken");
@@ -93,11 +101,69 @@ export default function DashboardPage() {
         body: JSON.stringify({ winner_id: winnerId, file_url: proofUrl })
       });
       if (!res.ok) throw new Error("Failed to upload proof");
-      alert("Proof uploaded successfully! Awaiting review.");
+      addToast("Proof uploaded successfully! Awaiting review.");
       setProofUrl("");
       loadProfile();
     } catch (e) {
-      alert("Error: " + e.message);
+      addToast(e.message, "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSubscribe = async (planType) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch("/api/subscription/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ plan_type: planType })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to subscribe");
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
+    } catch (e) {
+      addToast(e.message, "error");
+      setActionLoading(false);
+    }
+  };
+
+  const handleFetchCharities = async () => {
+    try {
+      const res = await fetch("/api/charities");
+      if (res.ok) {
+        const data = await res.json();
+        setCharitiesList(data.charities || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleUpdateCharity = async () => {
+    if (!selectedCharityId) return addToast("Select a charity!", "warning");
+    if (contribution < 10) return addToast("Minimum 10% contribution required!", "warning");
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch("/api/user/charity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          charity_id: selectedCharityId,
+          contribution_percentage: Number(contribution)
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update charity");
+      addToast("Charity updated successfully!");
+      setShowCharityModal(false);
+      loadProfile();
+    } catch (e) {
+      addToast(e.message, "error");
     } finally {
       setActionLoading(false);
     }
@@ -187,25 +253,30 @@ export default function DashboardPage() {
                   </p>
                   {subscription.start_date && (
                     <p className="text-gray-600 text-sm">
-                      Started: {new Date(subscription.start_date).toLocaleDateString()}
+                      Started: {subscription.start_date.slice(0, 10)}
                     </p>
                   )}
                 </div>
               ) : (
                 <div className="text-center py-6">
                   <p className="text-gray-500 text-sm mb-4">You don't have an active subscription yet.</p>
-                  <button className="btn-primary bg-emerald text-white px-6 py-2 rounded-full font-medium hover:bg-opacity-90 transition">
+                  <button onClick={() => setShowSubModal(true)} className="btn-primary bg-emerald text-white px-6 py-2 rounded-full font-medium hover:bg-opacity-90 transition">
                     Subscribe Now
                   </button>
                 </div>
               )}
             </div>
             {subscription && (
-              <div className="pt-4 mt-6 border-t border-gray-100 flex justify-end">
+              <div className="pt-4 mt-6 border-t border-gray-100 flex justify-end gap-4 items-center">
                 {subscription.status === "active" ? (
                   <button disabled={actionLoading} onClick={() => handleManageSub("cancel")} className="text-red-500 hover:text-red-700 text-sm font-medium">Cancel Subscription</button>
                 ) : subscription.status === "cancelled" ? (
                   <button disabled={actionLoading} onClick={() => handleManageSub("resume")} className="text-emerald hover:underline text-sm font-medium">Resume Subscription</button>
+                ) : subscription.status === "pending" || subscription.status === "past_due" ? (
+                  <>
+                    <button disabled={actionLoading} onClick={() => handleManageSub("cancel")} className="text-red-500 hover:text-red-700 text-sm font-medium">Cancel Subscription</button>
+                    <button disabled={actionLoading} onClick={() => handleSubscribe(subscription.plan_type)} className="text-white bg-emerald px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-opacity-90">Complete Payment</button>
+                  </>
                 ) : null}
               </div>
             )}
@@ -230,7 +301,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="text-center py-6">
                   <p className="text-gray-500 text-sm mb-4">Make an impact by selecting a charity.</p>
-                  <button className="btn-outline border border-emerald text-emerald px-6 py-2 rounded-full font-medium hover:bg-green-50 transition">
+                  <button onClick={() => { handleFetchCharities(); setShowCharityModal(true); }} className="btn-outline border border-emerald text-emerald px-6 py-2 rounded-full font-medium hover:bg-green-50 transition">
                     Select Charity
                   </button>
                 </div>
@@ -244,7 +315,7 @@ export default function DashboardPage() {
                      Donate Directly
                    </button>
                  </div>
-                 <button className="text-xs font-medium text-gray-500 hover:text-gray-700 text-right">
+                 <button onClick={() => { handleFetchCharities(); setShowCharityModal(true); }} className="text-xs font-medium text-gray-500 hover:text-gray-700 text-right">
                    Change Selected Charity
                  </button>
               </div>
@@ -264,7 +335,7 @@ export default function DashboardPage() {
               {scores.map((s) => (
                 <div key={s.id} className="border border-emerald/20 bg-emerald/5 rounded-lg p-4 flex flex-col items-center justify-center">
                   <span className="text-2xl font-bold text-emerald mb-1">{s.score}</span>
-                  <span className="text-xs text-gray-500">{new Date(s.played_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-gray-500">{s.played_at.slice(0, 10)}</span>
                 </div>
               ))}
             </div>
@@ -279,6 +350,52 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Subscribe Modal */}
+      {showSubModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-center">
+            <h2 className="text-2xl font-bold mb-2 text-gray-900">Choose Your Plan</h2>
+            <p className="text-gray-500 mb-6 text-sm">Support charities and participate in our monthly draws.</p>
+            <div className="space-y-4">
+              <button disabled={actionLoading} onClick={() => handleSubscribe('monthly')} className="w-full bg-emerald text-white py-3 rounded-lg font-bold shadow hover:bg-opacity-90 transition">
+                Monthly Plan
+              </button>
+              <button disabled={actionLoading} onClick={() => handleSubscribe('yearly')} className="w-full bg-gray-900 text-white py-3 rounded-lg font-bold shadow hover:bg-gray-800 transition">
+                Yearly Plan (Save 15%)
+              </button>
+            </div>
+            <button disabled={actionLoading} onClick={() => setShowSubModal(false)} className="mt-6 text-gray-500 hover:text-gray-700 font-medium">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Charity Modal */}
+      {showCharityModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-left">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">Select a Charity</h2>
+            <p className="text-gray-500 mb-6 text-sm">Choose where your draw contribution goes. Minimum 10% is required by rules.</p>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Charity</label>
+                <select value={selectedCharityId} onChange={(e) => setSelectedCharityId(e.target.value)} className="w-full px-3 py-2 border rounded shadow-sm focus:outline-emerald border-gray-300 bg-white text-gray-900">
+                  <option value="">-- Choose Charity --</option>
+                  {charitiesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contribution Percentage (%)</label>
+                <input type="number" min="10" max="100" value={contribution} onChange={(e) => setContribution(e.target.value)} className="w-full px-3 py-2 border rounded shadow-sm focus:outline-emerald border-gray-300 text-gray-900 bg-white" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button disabled={actionLoading} onClick={() => setShowCharityModal(false)} className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 transition">Cancel</button>
+              <button disabled={actionLoading} onClick={handleUpdateCharity} className="px-4 py-2 bg-emerald text-white rounded font-medium shadow hover:bg-opacity-90 transition">Save Selection</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

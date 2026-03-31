@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { validateAdminToken, unauthorizedResponse } from "@/lib/adminAuth";
 import { supabase } from "@/lib/supabaseClient";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const { admin_id, action, entity_type, entity_id } = await req.json();
-    if (!admin_id || !action || !entity_type) {
-      return NextResponse.json({ error: "admin_id, action, and entity_type are required" }, { status: 400 });
+    if (!validateAdminToken(req)) {
+      return unauthorizedResponse();
     }
 
     const { data, error } = await supabase.from("admin_logs").insert({
@@ -25,6 +25,9 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
+    if (!validateAdminToken(req)) {
+      return unauthorizedResponse();
+    }
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || "50");
     const { data, error } = await supabase
       .from("admin_logs")

@@ -2,15 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
 import Link from "next/link";
 
 export default function ScoresPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [scores, setScores] = useState([]);
   const [nextScore, setNextScore] = useState("");
   const [playedAt, setPlayedAt] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null);
 
   const fetchScores = useCallback(async () => {
     const token = localStorage.getItem("authToken");
@@ -31,20 +32,19 @@ export default function ScoresPage() {
       const data = await res.json();
       setScores(data.scores || []);
     } catch (err) {
-      setMessage(err.message);
+      addToast(err.message, "error");
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, addToast]);
 
   useEffect(() => {
     fetchScores();
   }, [fetchScores]);
 
   const submitScore = async () => {
-    setMessage(null);
     if (!nextScore || nextScore < 1 || nextScore > 45) {
-      setMessage("Score must be between 1 and 45");
+      addToast("Score must be between 1 and 45", "warning");
       return;
     }
 
@@ -66,11 +66,11 @@ export default function ScoresPage() {
         throw new Error(data.error || "Failed to add score");
       }
       
-      setMessage("Score successfully added!");
+      addToast("Score successfully added! ⛳");
       setScores(data.scores || []);
       setNextScore("");
     } catch (err) {
-      setMessage(err.message);
+      addToast(err.message, "error");
     }
   };
 
@@ -123,12 +123,6 @@ export default function ScoresPage() {
               </button>
             </div>
           </div>
-          
-          {message && (
-            <div className={`mt-6 p-4 rounded-md text-sm font-medium ${message.includes("success") ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-              {message}
-            </div>
-          )}
         </div>
 
         {/* Scores List */}
@@ -151,7 +145,7 @@ export default function ScoresPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-800">Score Entry</p>
-                      <p className="text-sm text-gray-500">{new Date(score.played_at).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-500">{score.played_at.slice(0, 10)}</p>
                     </div>
                   </div>
                   <div className="text-xs text-gray-400 max-w-[100px] truncate" title={score.id}>

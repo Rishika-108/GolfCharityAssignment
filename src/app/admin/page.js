@@ -1,32 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
+import Link from "next/link";
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { addToast } = useToast();
   const [draws, setDraws] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDraw, setSelectedDraw] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [metrics, setMetrics] = useState(null);
+  const [drawType, setDrawType] = useState("random");
 
   useEffect(() => {
-    loadDraws();
-  }, []);
-
-  const loadDraws = async () => {
-    try {
-      const res = await fetch("/api/draw/run", {
-        method: "GET",
-        headers: { "x-admin-token": process.env.NEXT_PUBLIC_ADMIN_TOKEN || "admin-token" }
-      });
-      if (!res.ok) throw new Error("Failed to load draws");
-      const data = await res.json();
-      setDraws(data.draws || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    const isAdmin = localStorage.getItem("isAdminAuthenticated");
+    if (!isAdmin) {
+      router.push("/admin/login");
+      return;
     }
+    loadDraws();
+    loadAnalytics();
+  }, [router]);
+
+  const loadAnalytics = async () => {
+    try {
+      const res = await fetch("/api/admin/analytics", {
+        headers: { "x-admin-token": "admin-token" }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMetrics(data.metrics);
+      }
+    } catch (err) { console.error(err); }
   };
 
   const runDraw = async () => {
@@ -34,16 +42,38 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/draw/run", {
         method: "POST",
-        headers: { "x-admin-token": process.env.NEXT_PUBLIC_ADMIN_TOKEN || "admin-token" }
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-token": "admin-token" 
+        },
+        body: JSON.stringify({ draw_type: drawType })
       });
       if (!res.ok) throw new Error("Failed to run draw");
       const data = await res.json();
       setDraws(prev => [data.draw, ...prev]);
-      alert("Draw completed successfully!");
+      addToast(`${drawType.toUpperCase()} Draw completed successfully!`);
+      loadAnalytics();
     } catch (err) {
-      alert("Error: " + err.message);
+      addToast(err.message, "error");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const loadDraws = async () => {
+    try {
+      const res = await fetch("/api/draw/run", {
+        method: "GET",
+        headers: { "x-admin-token": "admin-token" }
+      });
+      if (!res.ok) throw new Error("Failed to load draws");
+      const data = await res.json();
+      setDraws(data.draws || []);
+    } catch (err) {
+      setError(err.message);
+      addToast("Connection issue with draw server", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,15 +84,15 @@ export default function AdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": process.env.NEXT_PUBLIC_ADMIN_TOKEN || "admin-token"
+          "x-admin-token": "admin-token"
         },
         body: JSON.stringify({ draw_id: drawId })
       });
       if (!res.ok) throw new Error("Failed to simulate draw");
       const data = await res.json();
-      alert(`Simulation complete! Results: ${data.results.length} participants`);
+      addToast(`Simulation complete! Results: ${data.results.length} participants`);
     } catch (err) {
-      alert("Error: " + err.message);
+      addToast(err.message, "error");
     } finally {
       setActionLoading(false);
     }
@@ -75,16 +105,17 @@ export default function AdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": process.env.NEXT_PUBLIC_ADMIN_TOKEN || "admin-token"
+          "x-admin-token": "admin-token"
         },
         body: JSON.stringify({ draw_id: drawId })
       });
       if (!res.ok) throw new Error("Failed to finalize draw");
       const data = await res.json();
-      alert(`Draw finalized! ${data.winnersCreated} winners created`);
+      addToast(`Draw finalized! ${data.winnersCreated} winners created`);
       loadDraws();
+      loadAnalytics();
     } catch (err) {
-      alert("Error: " + err.message);
+      addToast(err.message, "error");
     } finally {
       setActionLoading(false);
     }
@@ -96,33 +127,70 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--color-ghost-white)" }}>
       <div className="p-8 max-w-6xl mx-auto">
-        <div className="mb-12">
-          <h1 className="heading-1">Admin Panel</h1>
-          <p className="subtitle mt-2">Manage draws, winners, and platform operations</p>
+        <div className="mb-10 flex justify-between items-end">
+          <div>
+            <h1 className="heading-1">Admin Panel</h1>
+            <p className="subtitle mt-2">Manage draws, winners, and platform operations</p>
+          </div>
+          <div className="flex gap-3">
+             <button 
+               onClick={() => { localStorage.removeItem("isAdminAuthenticated"); router.push("/"); }}
+               className="text-sm font-bold text-red-400 hover:text-red-500 transition"
+             >
+               Logout Admin
+             </button>
+             <Link href="/" className="text-sm font-medium text-gray-500 hover:text-emerald">Live Site &nearr;</Link>
+          </div>
         </div>
+
+        {/* Analytics Section */}
+        {metrics && (
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {[
+                { label: "Total Users", val: metrics.total_users, icon: "👥" },
+                { label: "Total Draws", val: metrics.total_draws, icon: "🎲" },
+                { label: "Prize Pool", val: `$${Number(metrics.total_prize_pool).toFixed(2)}`, icon: "💰" },
+                { label: "Donations", val: `$${Number(metrics.total_donations).toFixed(2)}`, icon: "❤️" }
+              ].map((m, i) => (
+                <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                   <div className="flex items-center justify-between mb-2">
+                     <span className="text-2xl">{m.icon}</span>
+                     <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{m.label}</span>
+                   </div>
+                   <div className="text-2xl font-black text-gray-900">{m.val}</div>
+                </div>
+              ))}
+           </div>
+        )}
 
         {/* Quick Actions */}
         <div className="card card-impact mb-8">
-          <h2 className="heading-2 mb-6">Quick Actions</h2>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+            <h2 className="heading-2">Draw Controls</h2>
+            <div className="flex items-center gap-3 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+               <button onClick={() => setDrawType("random")} className={`px-4 py-1.5 rounded-md text-sm font-bold transition ${drawType === 'random' ? 'bg-white shadow-sm text-emerald' : 'text-gray-400'}`}>Random</button>
+               <button onClick={() => setDrawType("algorithmic")} className={`px-4 py-1.5 rounded-md text-sm font-bold transition ${drawType === 'algorithmic' ? 'bg-white shadow-sm text-emerald' : 'text-gray-400'}`}>Algorithmic</button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={runDraw}
               disabled={actionLoading}
               className="btn-primary py-4 rounded-lg font-semibold flex items-center justify-center gap-2"
             >
-              {actionLoading ? "..." : "🎲"} Run New Draw
+              {actionLoading ? "..." : "🎲"} Run {drawType} Draw
             </button>
             <button
-              onClick={() => window.location.href = "/scores"}
+              onClick={() => window.location.href = "/admin/charities"}
               className="btn-secondary py-4 rounded-lg font-semibold flex items-center justify-center gap-2"
             >
-              ⛳ Manage Scores
+              🏢 Manage Charities
             </button>
             <button
-              onClick={() => window.location.href = "/dashboard"}
+              onClick={() => window.location.href = "/admin/winners"}
               className="btn-outline py-4 rounded-lg font-semibold flex items-center justify-center gap-2"
             >
-              📊 View Dashboard
+              🏆 Manage Winners
             </button>
           </div>
         </div>
@@ -210,7 +278,7 @@ export default function AdminPage() {
           <div className="card card-impact">
             <h3 className="heading-3 mb-4">System Logs</h3>
             <p className="subtitle mb-4">View admin actions and system events</p>
-            <button className="btn-outline w-full py-2 rounded-lg font-semibold border border-emerald text-emerald hover:bg-emerald/10 transition">
+            <button onClick={() => window.location.href = "/admin/logs"} className="btn-outline w-full py-2 rounded-lg font-semibold border border-emerald text-emerald hover:bg-emerald/10 transition">
               View Logs &rarr;
             </button>
           </div>

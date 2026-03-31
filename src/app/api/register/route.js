@@ -3,13 +3,13 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function POST(req) {
   try {
-    const { full_name, email, password, country, charity_id, contribution_percentage, is_admin } = await req.json();
+    const { full_name, email, password, country, charity_id, contribution_percentage } = await req.json();
 
     if (!full_name || !email || !password || !country) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    if (!is_admin && (!charity_id || !contribution_percentage)) {
+    if (!charity_id || !contribution_percentage) {
       return NextResponse.json({ error: "Missing charity required fields" }, { status: 400 });
     }
 
@@ -27,14 +27,14 @@ export async function POST(req) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .insert({ id: userId, full_name, email, country, is_admin: is_admin || false })
+      .insert({ id: userId, full_name, email, country, is_admin: false })
       .select()
       .single();
 
     if (profileError) throw profileError;
 
     let userCharity = null;
-    if (!is_admin && charity_id) {
+    if (charity_id) {
       const { data: uc, error: userCharityError } = await supabase
         .from("user_charities")
         .insert({

@@ -206,3 +206,8 @@ h3, .heading-3 {
   box-shadow: 0 6px 18px rgba(45, 106, 79, 0.4);
 }
 
+/* Missing Custom Utility Classes for Tailwind v4 */
+.bg-emerald { background-color: var(--color-emerald); }
+.text-emerald { color: var(--color-emerald); }
+.border-emerald { border-color: var(--color-emerald); }
+
